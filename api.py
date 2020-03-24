@@ -27,8 +27,6 @@ def main():
     youtube = googleapiclient.discovery.build(
         api_service_name, api_version, developerKey='AIzaSyDkgxY7colARIhKWa3Ke0uHFZfgH8w9fEs')
 
-
-
     request = youtube.channels().list(
         part="snippet,contentDetails,statistics",
         forUsername="FoxBusinessNetwork"
@@ -36,7 +34,6 @@ def main():
     response = request.execute()
 
     upload_list = response['items'][0]['contentDetails']['relatedPlaylists']['uploads']
-    
     
     request = youtube.playlistItems().list(
         part="snippet,contentDetails",
@@ -46,9 +43,19 @@ def main():
 
     response = request.execute()
     
-    print(json.dumps(response, indent=4))
+    #print(json.dumps(response, indent=4))
 
     for item in response['items']:
         print(item['snippet']['title'])
+        request = youtube.videos().list(
+        part="snippet,contentDetails,statistics, player",
+        id=item['snippet']['resourceId']['videoId'],
+        maxHeight=281,
+        maxWidth=500
+    )
+        data = request.execute()
+
+        print(json.dumps(data, indent=4))
+
 if __name__ == "__main__":
     main()
