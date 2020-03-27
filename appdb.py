@@ -28,13 +28,7 @@ manager.add_command('db', MigrateCommand)
 
 login_manager = LoginManager()
 login_manager.init_app(app)
-"""
-from . import auth, routes, auth_routes, funnel_stats
 
-app.register_blueprint(routes.main_bp)
-app.register_blueprint(auth.auth_bp)
-app.register_blueprint(auth_routes.oauth_bp)
-app.register_blueprint(funnel_stats.metrics_bp)
-"""
 import flask_home
-import models
+app.register_blueprint(flask_home.home)
+
