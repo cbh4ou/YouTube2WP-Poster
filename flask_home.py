@@ -4,7 +4,6 @@ from flask import Blueprint, request, render_template, redirect, url_for, jsonif
 import json
 from appdb import db
 from datetime import date, timedelta, datetime
-import pandas as pd
 import os
 from werkzeug.utils import secure_filename
 import time
