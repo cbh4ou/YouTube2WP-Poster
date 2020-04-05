@@ -12,8 +12,8 @@ from datetime import datetime
 from wp_post import Custom_WP_XMLRPC
 from appdb import db
 from models import Channels
-from wp_user import update_user, create_user
-import time
+from user_test import update_user, create_user
+
 
 
 
@@ -53,7 +53,7 @@ def process_videos():
         response = request.execute()
 
 
-        print(json.dumps(response, indent=4))
+        #print(json.dumps(response, indent=4))
 
         for item in response['items']:
             old = x.time_created
@@ -92,8 +92,7 @@ def process_videos():
                 <a href="{2}" target="_blank"><img style="float: right; display: inline" src="{3}" width="144" align="right" height="108"></a>{4}"
                 '''.format(channel_name, embed, thumbnail_hq, thumbnail_default, description)
 
-                for website in ['https://americanboomerdaily.com/postmaker.php', 'https://economiccrisisreport.com/xmlrpc.php',
-                'https://familysurvivalheadlines.com/xmlrpc.php']:
+                for website in ['https://americanboomerdaily.com/postmaker.php']:
                     ariclePhotoUrl=thumbnail_default
                     # Dont forget the /xmlrpc.php cause thats your posting adress for XML Server
                     wpUrl=website
@@ -121,9 +120,8 @@ def process_videos():
                             break
                         except Exception as ex:
                             print(ex)
-                            create_user(wpUserName, website)
-                            time.sleep(10)
                             wpPassword = update_user(website, i, wpUserName)
+                            create_user(wpUserName, website)
                             i = i+1
                             continue
                     #print(content)

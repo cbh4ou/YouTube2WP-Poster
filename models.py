@@ -2,7 +2,6 @@
 from sqlalchemy.sql import func
 import os
 from appdb import db
-here = os.path.dirname(os.path.abspath(__file__))
 import json
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -154,6 +153,7 @@ class User(UserMixin, BaseModel):
                            unique=False,
                            nullable=True)
 
+
     def set_password(self, password):
         """Create hashed password."""
         self.password = generate_password_hash(password, method='sha256')
@@ -177,17 +177,50 @@ class Channels(UserMixin, BaseModel):
     channel_name = db.Column(db.String,
                      nullable=False,
                      unique=False)
-    playlist_id = db.Column(db.String(40),
+    playlist_id = db.Column(db.String(100),
                       unique=True,
                       nullable=True)
     username = db.Column(db.String(200),
                          primary_key=False,
                          unique=False,
                          nullable=False)
-    password = db.Column(db.String(60),
+    password = db.Column(db.String(100),
                         index=False,
                         unique=False,
                         nullable=True)
+    category = db.Column(db.String(50),
+                         primary_key=False,
+                         unique=False,
+                         nullable=False)
+    xmlrpc = db.Column(db.String(150),
+                        index=False,
+                        unique=False,
+                        nullable=True)
+    time_created = db.Column(db.DateTime,
+                           index=False,
+                           unique=False,
+                           nullable=True)
+    """
+    website = db.Column(db.Integer,
+                     nullable=False,
+                     unique=False)
+    """
+
+class Websites(UserMixin, BaseModel):
+    """Model for user accounts."""
+
+    __tablename__ = 'websites'
+    __table_args__ = {'extend_existing': True}
+
+    id = db.Column(db.Integer,
+                   primary_key=True)
+    website = db.Column(db.String(150),
+                     nullable=False,
+                     unique=True)
+    password = db.Column(db.String(150),
+                      unique=True,
+                      nullable=True)
+
 
 
 

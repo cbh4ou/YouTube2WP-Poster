@@ -1,14 +1,13 @@
 import urllib.request
-from wordpress_xmlrpc import Client, WordPressPost
-from wordpress_xmlrpc.methods import posts
-import xmlrpc
 from wordpress_xmlrpc.compat import xmlrpc_client
 from wordpress_xmlrpc.methods import media, posts
 import os
+from wordpress_xmlrpc import Client, WordPressPost
 
 class Custom_WP_XMLRPC:
     def post_article(self, wpUrl, wpUserName, wpPassword, articleTitle, articleCategories, articleContent, articleTags, PhotoUrl, excerptContent):
-        self.path = os.getcwd()+"\\00000001.jpg"
+        here = os.path.dirname(os.path.abspath(__file__))
+        self.path = os.path.dirname(os.path.abspath(__file__)) + "/YTimg.jpg"
         self.articlePhotoUrl = PhotoUrl
         self.wpUrl = wpUrl
         self.wpUserName = wpUserName

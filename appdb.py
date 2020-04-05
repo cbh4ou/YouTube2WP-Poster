@@ -17,6 +17,7 @@ app = Flask(__name__,template_folder='assets/templates',static_url_path='', stat
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['DEBUG'] = False
+app.config.from_object('config.Config')
 app.config['UPLOAD_FOLDER'] = os.path.dirname(os.path.abspath(__file__))
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://%(user)s:\
 %(pw)s@%(host)s:%(port)s/%(db)s' % POSTGRES
@@ -29,6 +30,7 @@ manager.add_command('db', MigrateCommand)
 login_manager = LoginManager()
 login_manager.init_app(app)
 
-import flask_home
+import flask_home, login
+app.register_blueprint(login.auth_bp)
 app.register_blueprint(flask_home.home)
 

@@ -1,4 +1,3 @@
-from wordpress import API
 import requests
 import json
 import base64
@@ -6,8 +5,8 @@ import http.client
 import mimetypes
 
 def main():
-    
-    
+
+
     """
     wpapi = API(
         url="https://economiccrisisreport.com",
@@ -25,7 +24,7 @@ def main():
     endpoint = "/wp/v2/users"
     wpapi.get(endpoint)
     """
-    
+
     conn = http.client.HTTPSConnection("americanboomerdaily.com")
     payload = ''
     headers = {
@@ -36,6 +35,6 @@ def main():
     res = conn.getresponse()
     data = res.read()
     print(data.decode("utf-8"))
-    
-    
+
+
 main()
