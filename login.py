@@ -1,9 +1,8 @@
 from flask import redirect, render_template, flash, Blueprint, request, url_for
 from flask_login import login_required, logout_user, current_user, login_user
-from werkzeug.security import generate_password_hash
-from forms import LoginForm, SignupForm
-from models import db, User
-from appdb import login_manager
+from forms import LoginForm
+from models import  User
+from extensions import login_manager
 
 
 # Blueprint Configuration
@@ -31,7 +30,7 @@ def login_page():
                 if user.check_password(password=password):
                     login_user(user)
                     next = request.args.get('next')
-                    return redirect(next or url_for('home.dashboard'))
+                    return redirect(next or url_for('home.route_home'))
         flash('Invalid username/password combination')
         return redirect(url_for('auth_bp.login_page'))
     # GET: Serve Log-in page
@@ -41,10 +40,10 @@ def login_page():
                            template='login-page',
                            body="Log in with your User account.")
 
-
+"""
 @auth_bp.route('/signup', methods=['GET', 'POST'])
 def signup_page():
-    """User sign-up page."""
+    #User sign-up page.
     signup_form = SignupForm(request.form)
     # POST: Sign user in
     if request.method == 'POST':
@@ -73,7 +72,7 @@ def signup_page():
                            template='signup-page',
                            body="Sign up for a user account.")
 
-
+"""
 @auth_bp.route("/logout")
 @login_required
 def logout_page():

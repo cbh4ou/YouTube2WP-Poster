@@ -2,7 +2,7 @@ import base64
 import http.client
 from urllib.parse import urlencode, urlparse
 from models import Websites, Channels
-from appdb import db
+from extensions import db
 
 
 def update_user(website, uid, username):

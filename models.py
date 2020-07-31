@@ -1,128 +1,14 @@
-
-from sqlalchemy.sql import func
-import os
-from appdb import db
-import json
+from basemodel import (
+    Model,
+    db
+)
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 
 
 
 
-
-class BaseModel(db.Model):
-    __abstract__ = True
-
-    def to_dict(self, show=None, _hide=[], _path=None):
-        """Return a dictionary representation of this model."""
-
-        show = show or []
-
-        hidden = self._hidden_fields if hasattr(self, "_hidden_fields") else []
-        default = self._default_fields if hasattr(self, "_default_fields") else []
-        default.extend(['id', 'modified_at', 'created_at'])
-
-        if not _path:
-            _path = self.__tablename__.lower()
-
-            def prepend_path(item):
-                item = item.lower()
-                if item.split(".", 1)[0] == _path:
-                    return item
-                if len(item) == 0:
-                    return item
-                if item[0] != ".":
-                    item = ".%s" % item
-                item = "%s%s" % (_path, item)
-                return item
-
-            _hide[:] = [prepend_path(x) for x in _hide]
-            show[:] = [prepend_path(x) for x in show]
-
-        columns = self.__table__.columns.keys()
-        relationships = self.__mapper__.relationships.keys()
-        properties = dir(self)
-
-        ret_data = {}
-
-        for key in columns:
-            if key.startswith("_"):
-                continue
-            check = "%s.%s" % (_path, key)
-            if check in _hide or key in hidden:
-                continue
-            if check in show or key in default:
-                ret_data[key] = getattr(self, key)
-
-        for key in relationships:
-            if key.startswith("_"):
-                continue
-            check = "%s.%s" % (_path, key)
-            if check in _hide or key in hidden:
-                continue
-            if check in show or key in default:
-                _hide.append(check)
-                is_list = self.__mapper__.relationships[key].uselist
-                if is_list:
-                    items = getattr(self, key)
-                    if self.__mapper__.relationships[key].query_class is not None:
-                        if hasattr(items, "all"):
-                            items = items.all()
-                    ret_data[key] = []
-                    for item in items:
-                        ret_data[key].append(
-                            item.to_dict(
-                                show=list(show),
-                                _hide=list(_hide),
-                                _path=("%s.%s" % (_path, key.lower())),
-                            )
-                        )
-                else:
-                    if (
-                        self.__mapper__.relationships[key].query_class is not None
-                        or self.__mapper__.relationships[key].instrument_class
-                        is not None
-                    ):
-                        item = getattr(self, key)
-                        if item is not None:
-                            ret_data[key] = item.to_dict(
-                                show=list(show),
-                                _hide=list(_hide),
-                                _path=("%s.%s" % (_path, key.lower())),
-                            )
-                        else:
-                            ret_data[key] = None
-                    else:
-                        ret_data[key] = getattr(self, key)
-
-        for key in list(set(properties) - set(columns) - set(relationships)):
-            if key.startswith("_"):
-                continue
-            if not hasattr(self.__class__, key):
-                continue
-            attr = getattr(self.__class__, key)
-            if not (isinstance(attr, property) or isinstance(attr, QueryableAttribute)):
-                continue
-            check = "%s.%s" % (_path, key)
-            if check in _hide or key in hidden:
-                continue
-            if check in show or key in default:
-                val = getattr(self, key)
-                if hasattr(val, "to_dict"):
-                    ret_data[key] = val.to_dict(
-                        show=list(show),
-                        _hide=list(_hide), _path=("%s.%s" % (_path, key.lower()))
-                    )
-                else:
-                    try:
-                        ret_data[key] = json.loads(json.dumps(val))
-                    except:
-                        pass
-
-        return ret_data
-
-
-class User(UserMixin, BaseModel):
+class User(UserMixin, Model):
     """Model for user accounts."""
 
     __tablename__ = 'flasklogin'
@@ -166,7 +52,7 @@ class User(UserMixin, BaseModel):
         return '<User {}>'.format(self.username)
 
 
-class Channels(UserMixin, BaseModel):
+class Channels(Model):
     """Model for user accounts."""
 
     __tablename__ = 'channels'
@@ -200,13 +86,21 @@ class Channels(UserMixin, BaseModel):
                            index=False,
                            unique=False,
                            nullable=True)
+    channel_id = db.Column(db.Boolean,
+                         primary_key=False,
+                         unique=False,
+                         nullable=False)
+    youtube_id = db.Column(db.String,
+                         primary_key=False,
+                         unique=False,
+                         nullable=False)
     """
     website = db.Column(db.Integer,
                      nullable=False,
                      unique=False)
     """
 
-class Websites(UserMixin, BaseModel):
+class Websites(Model):
     """Model for user accounts."""
 
     __tablename__ = 'websites'
@@ -220,11 +114,117 @@ class Websites(UserMixin, BaseModel):
     password = db.Column(db.String(150),
                       unique=True,
                       nullable=True)
+    xmlrpc =    db.Column(db.String(150),
+                      unique=True,
+                      nullable=False)
+
+class Parentsku(Model):
+    """Model for the stations table"""
+    __tablename__ = 'parentskus'
+    __table_args__ = {'extend_existing': True}
+    p_id = db.Column(db.Integer, primary_key = True)
+    parent_sku = db.Column(db.Unicode)
+    featured = db.Column(db.Boolean, default=False)
+    encorestock = db.Column(db.Integer, default=0)
+    inboundstock = db.Column(db.Integer, default=0)
+    day1 = db.Column(db.Integer, default=0)
+    day3 = db.Column(db.Integer, default=0)
+    day7 = db.Column(db.Integer, default=0)
+    day14 = db.Column(db.Integer, default=0)
+    day28 = db.Column(db.Integer, default=0)
+    #childsku = db.relationship('Quantities.child_sku', backref='owner')
+
+
+    def __init__(self, parent_sku, featured, encorestock, inboundstock,day1, day3, day7, day14, day28):
+        self.parent_sku = parent_sku
+        self.featured = featured
+        self.encorestock = encorestock
+        self.inboundstock = inboundstock
+        self.day1 = day1
+        self.day3 = day3
+        self.day7 = day7
+        self.day14 = day14
+        self.day28 = day28
+    @property
+    def serialize(self):
+       """Return object data in easily serializable format"""
+       return {
+            'p_id': self.p_id,
+            'parent_sku': self.parent_sku,
+            'featured': self.featured,
+            'encorestock' : self.encorestock,
+            'inboundstock' : self.inboundstock,
+            'day1' : self.day1,
+            'day3': self.day3,
+            'day7': self.day7,
+            'day14': self.day14,
+            'day28': self.day28
+           # This is an example how to deal with Many2Many relations
+
+
+       }
+class Notifs(Model):
+
+    __tablename__='notif_settings'
+    __table_args__ = {'extend_existing': True}
+
+
+    id = db.Column(db.Integer, primary_key = True)
+    funnel_name = db.Column(db.Unicode)
+    sms = db.Column(db.Boolean)
+    email = db.Column(db.Boolean)
 
 
 
 
+    @property
+    def serialize(self):
+       """Return object data in easily serializable format"""
+       return {
+           "id" : self.id,
+           "funnel_name" : self.funnel_name,
+           "sms" : self.sms,
+           "email" : self.email
+       }
+    @property
+    def serialize_many2many(self):
+       """
+       Return object's relations in easily serializable format.
+       NB! Calls many2many's serialize property.
+       """
+       return [ item.serialize for item in self.many2many]
 
 
+class Funnels(Model):
+    """Model for the stations table"""
+    __tablename__ = 'funnel_identities'
+    __table_args__ = {'extend_existing': True}
+    id = db.Column(db.Integer, primary_key = True)
+    funnel_name = db.Column(db.Unicode)
+    funnel_id = db.Column(db.Unicode)
+    view_id = db.Column(db.Unicode)
+    stats_link = db.Column(db.Unicode)
+    optin = db.Column(db.Unicode)
+
+    @property
+    def serialize(self):
+       """Return object data in easily serializable format"""
+       return {
+           'id': self.id,
+           'funnel_name': self.funnel_name,
+           'funnel_id': self.funnel_sku,
+           # This is an example how to deal with Many2Many relations
+           'view_id': self.view_id,
+           'stats_link' : self.stats_link,
+            "optin" : self.optin
+
+       }
+
+       def __init__(self, funnel_name,funnel_id, stats_link, view_id, optin):
+           self.funnel_name = funnel_name
+           self.funnel_id = funnel_id
+           self.view_id = self.view_id
+           self.stats_link = self.stats_link
+           self.optin = self.optin
 
 

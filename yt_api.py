@@ -5,22 +5,19 @@
 # https://developers.google.com/explorer-help/guides/code_samples#python
 
 import os
-import json
-import googleapiclient.discovery
-import googleapiclient.errors
+from googleapiclient import discovery
 from datetime import datetime
-from wp_post import Custom_WP_XMLRPC
-from appdb import db
-from models import Channels
-from wp_user import update_user, create_user
-import time
-
-
+from models import Channels, Websites
+from wp_user import update_user, create_user, create_category, get_user, user_post, get_category
+from alerts import Twilio
+from basemodel import db
+from appdb import create_app
+create_app()
 
 scopes = ["https://www.googleapis.com/auth/youtube.readonly"]
 
 def process_videos():
-    channels = db.session.query(Channels).filter().all()
+    channels = Channels.query.filter().all()
     for x in channels:
         upload_date=[]
         # Disable OAuthlib's HTTPS verification when running locally.
@@ -29,21 +26,30 @@ def process_videos():
 
         api_service_name = "youtube"
         api_version = "v3"
-
+        response = ''
         # Get credentials and create an API client
-        youtube = googleapiclient.discovery.build(
-            api_service_name, api_version, developerKey='AIzaSyDkgxY7colARIhKWa3Ke0uHFZfgH8w9fEs')
-        print(x.channel_name)
-        request = youtube.channels().list(
-            part="snippet,contentDetails,statistics",
-            forUsername=x.channel_name
-        )
-        response = request.execute()
-
+        if x.channel_id is False:
+            youtube = discovery.build(
+                api_service_name, api_version, developerKey='AIzaSyDkgxY7colARIhKWa3Ke0uHFZfgH8w9fEs')
+            print(x.channel_name)
+            request = youtube.channels().list(
+                part="snippet,contentDetails,statistics",
+                forUsername=x.channel_name
+            )
+            response = request.execute()
+        else:
+            youtube = discovery.build(
+                "youtube", "v3", developerKey='AIzaSyDkgxY7colARIhKWa3Ke0uHFZfgH8w9fEs')
+            print(x.channel_name)
+            request = youtube.channels().list(
+                part="snippet,contentDetails,statistics",
+                id=str(x.youtube_id)
+            )
+            response = request.execute()
+            #print(response)
 
         upload_list = response['items'][0]['contentDetails']['relatedPlaylists']['uploads']
         x.playlist_id = upload_list
-        db.session.commit()
         request = youtube.playlistItems().list(
             part="snippet,contentDetails",
             maxResults=20,
@@ -53,27 +59,33 @@ def process_videos():
         response = request.execute()
 
 
-        print(json.dumps(response, indent=4))
+        #print(json.dumps(response, indent=4))
 
         for item in response['items']:
             old = x.time_created
             old = old.strftime('%Y-%m-%dT%H:%M:%S')
             old = datetime.strptime(old, '%Y-%m-%dT%H:%M:%S')
+            upload_date.append(old)
+            #print(old)
             new = item['snippet']['publishedAt'][:19]
             new_post_date = datetime.strptime(new, '%Y-%m-%dT%H:%M:%S')
-            upload_date.append(new_post_date)
+            print(new_post_date)
 
-            if new_post_date > old:
-                print(x.time_created)
-                print(old)
-                print(new_post_date)
-                #print(item['snippet']['title'])
+
+            if new_post_date > min(upload_date):
+                upload_date.append(new_post_date)
+                Channels.query.filter(Channels.channel_name == x.channel_name).update({'time_created' : max(upload_date) }, synchronize_session = False)
+                db.session.commit()
+                db.session.close()
+                print('POSTED' , new_post_date, item['snippet']['title'])
                 request = youtube.videos().list(
                 part="snippet,contentDetails,player",
                 id=item['snippet']['resourceId']['videoId'],
                 maxHeight=281,
                 maxWidth=500
                 )
+
+
 
                 data = request.execute()
                 embed = data['items'][0]['player']['embedHtml']
@@ -82,7 +94,7 @@ def process_videos():
                 channel_name = data['items'][0]['snippet']['channelTitle']
                 thumbnail_default = data['items'][0]['snippet']['thumbnails']['default']['url']
                 thumbnail_hq = data['items'][0]['snippet']['thumbnails']['high']['url']
-                #print(embed)
+
 
                 content = '''
                 The following video is brought to you courtesy of the {0} YouTube Channel. Click the video below to watch it now.
@@ -91,16 +103,17 @@ def process_videos():
 
                 <a href="{2}" target="_blank"><img style="float: right; display: inline" src="{3}" width="144" align="right" height="108"></a>{4}"
                 '''.format(channel_name, embed, thumbnail_hq, thumbnail_default, description)
+                websites = db.session.query(Websites).filter().all()
 
-                for website in ['https://americanboomerdaily.com/postmaker.php', 'https://economiccrisisreport.com/xmlrpc.php',
-                'https://familysurvivalheadlines.com/xmlrpc.php']:
-                    ariclePhotoUrl=thumbnail_default
+                for website in websites:
+
+                    url = website.website
+                    print(url)
+                    ariclePhotoUrl=thumbnail_hq
                     # Dont forget the /xmlrpc.php cause thats your posting adress for XML Server
-                    wpUrl=website
                     #WordPress Username
                     wpUserName=x.username
                     #WordPress Password
-                    wpPassword=x.password
                     #Post Title
                     articleTitle= title
                     #Post Body/Description
@@ -108,26 +121,27 @@ def process_videos():
                     #list of tags
                     articleTags=[]
                     #list of Categories
-                    articleCategories=[]
+                    articleCategories= str(get_category(url, x.category))
 
-                    xmlrpc_object	=	Custom_WP_XMLRPC()
+
                     #On Post submission this function will print the post id
-                    i = 2
-                    while True:
-                        try:
-                            print(x.username)
-                            print(website)
-                            xmlrpc_object.post_article(wpUrl,wpUserName,wpPassword,articleTitle, articleCategories, articleContent, articleTags,ariclePhotoUrl, description)
-                            break
-                        except Exception as ex:
-                            print(ex)
-                            create_user(wpUserName, website)
-                            time.sleep(10)
-                            wpPassword = update_user(website, i, wpUserName)
-                            i = i+1
-                            continue
+                    try:
+                        create_category(wpUserName, url, articleCategories[0])
+                        uid  = get_user(url, wpUserName)
+                        user_post(url, uid, articleTitle, articleCategories, articleContent, articleTags,ariclePhotoUrl, description[0:150])
+                    except Exception as ex:
+                        create_user(wpUserName, url)
+                        update_user(url, get_user(url, wpUserName) , wpUserName)
+                        print('ERRRRRRROOOOOOOOOOOOORRRRRRRRRRRRRRRRRRRR')
+                        print(ex)
+                        alert_sms = Twilio(url, str(ex))
+                        alert_sms.send_alert()
+                        continue
                     #print(content)
                     #print(json.dumps(data, indent=4))
-        x.time_created = max(upload_date)
-        db.session.commit()
+                db.session.close()
+            print(x.channel_name, 'MAX    :' ,  max(upload_date))
+
+
+
 process_videos()

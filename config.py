@@ -6,7 +6,7 @@ class Config:
 
     # General Config
     SECRET_KEY = 'HELLO'
-    FLASK_APP = os.environ.get('FLASK_APP')
+    FLASK_APP = 'appdb.py'
     FLASK_ENV = os.environ.get('FLASK_ENV')
     FLASK_DEBUG = os.environ.get('FLASK_DEBUG')
 

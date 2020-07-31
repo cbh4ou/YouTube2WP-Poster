@@ -1,0 +1,145 @@
+{% extends "layout_channel.html" %}
+
+{% block pagestyles %}
+<style>
+
+#parent {
+    margin: 5% 0 5% 0;
+}
+body {
+  display: flex;
+  min-height: 100vh;
+  flex-direction: column;
+}
+
+main {
+  flex: 1;
+}
+.checkbox-orange[type="checkbox"].filled-in:checked+span:not(.lever):after {
+     border: 1px solid red;
+     background-color: #2196F3;
+}
+input {
+  width: auto;
+}
+
+</style>
+{% endblock %}
+
+{% block content %}
+
+  <div id="parent">
+      <div class="row">
+      <div class="col s6 l6">
+       <h2 style="text-align: center;">Channel Editor</h2>
+  <div class="row">
+ <form class="col s12 l12" style='text-align: center;'  method="post" action="">
+  <div class="row">
+      <div class="col s6 l4 offset-l4">
+          <label>
+        <select   id="channel-dropdown">
+    <option value="" disabled selected>Choose your option</option>
+         </select>
+    Channel Select </label>
+  </div>
+  </div>
+  <div class="row">
+   <div class="col s6 l6 offset-l3">
+   <p>Does the Channel go by Channel ID? (ex. youtube.com/user/UCrp_UI8XtuYfpiqluWLD7Lw)</p>
+  </div>
+  </div>
+  <div class="row">
+   <div class="col s6 l3 offset-l3">
+   <p>
+      <label>
+        <input class='true' id='required' type="radio" name="group1" />
+        <span>Yes</span>
+      </label>
+    </p>
+  </div>
+  <div class="col s6 l3">
+  <p>
+      <label>
+          <input name="group1" id = 'optional' type="radio" value="False" checked/>
+        <span>No</span>
+      </label>
+    </p>
+  </div>
+  </div>
+ <div class='row'>
+    <div class='col s6 l12 attributes'>
+    <label>Channel Attributes</label>
+    <br>
+    <input type "text" placeholder = 'Channel Name' name="channelName" class="channelName attribute">
+    <input type "text" placeholder = 'Channel ID' name="channelID" class="channelID attribute">
+    <input type "text" placeholder = 'Category' name="category" class="category attribute">
+    </div>
+    </div>
+  <div class="row">
+      <div class="col s12 l6 offset-l3 btn-group">
+          <button class="btn waves-effect waves-light blue delete" style="margin: 10px 0 10px 0;" type="submit" name="action">Delete Channel
+  </button>
+      <button class="btn waves-effect waves-light blue submit type="submit" name="action"">Submit
+<i class="material-icons right">send</i>
+</button>
+</div>
+  </div>
+</form>
+  </div>
+  </div>
+      <div class="col s6 l6">
+  <h2 style="text-align: center;">Website Editor</h2>
+  <div class="row">
+ <form class="col s12 l12" style='text-align: center;'  method="post" action="">
+  <div class="row">
+      <div class="col s6 l4 offset-l4">
+          <label>
+        <select   id="website-dropdown">
+    <option value="" disabled selected>Choose your option</option>
+         </select>
+    Website Select </label>
+  </div>
+  </div>
+ <div class='row'>
+    <div class='col s6 l12 attributes'>
+    <label>Channel Attributes</label>
+    <br>
+    <input type "text" placeholder = 'Website' name="website" class="website attribute">
+    <input type "text" placeholder = 'App Password' name="password" class="password attribute">
+    </div>
+    </div>
+  <div class="row">
+      <div class="col s12 l6 offset-l3 btn-group">
+          <button class="btn waves-effect waves-light blue website-delete" style="margin: 10px 0 10px 0;" type="submit" name="action">Delete Website
+  </button>
+      <button class="btn waves-effect waves-light blue website-submit type="submit" name="action"">Submit
+<i class="material-icons right">send</i>
+</button>
+</div>
+  </div>
+</form>
+  </div>
+</div>
+</div>
+  <div id="modal1" class="modal">
+    <div class="modal-content">
+      <h5 id='question'>Delete: <p style='color: red; display: inline;'></p>?</h5>
+      <p>Once you click agree the funnel will be removed from the entire system</p>
+    </div>
+    <div class="modal-footer">
+      <a href="#!" id='disagree' class="modal-close waves-effect waves-green btn-flat disagree">Disagree</a>
+      <a href="#!" id ='agree' class="modal-close waves-effect waves-green btn-flat agree">Agree</a>
+    </div>
+  </div>
+
+   <div id="modal2" class="modal">
+    <div class="modal-content">
+      <h5 id='status'><p style='color: red; display: inline;'></p> has been deleted</h5>
+    </div>
+    <div class="modal-footer">
+      <a href="#!" id='disagree' class="modal-close waves-effect waves-green btn-flat disagree">Okay</a>
+    </div>
+  </div>
+
+{% endblock %}
+

@@ -6,13 +6,16 @@ from wordpress_xmlrpc import Client, WordPressPost
 
 class Custom_WP_XMLRPC:
     def post_article(self, wpUrl, wpUserName, wpPassword, articleTitle, articleCategories, articleContent, articleTags, PhotoUrl, excerptContent):
-        here = os.path.dirname(os.path.abspath(__file__))
+
+
         self.path = os.path.dirname(os.path.abspath(__file__)) + "/YTimg.jpg"
         self.articlePhotoUrl = PhotoUrl
         self.wpUrl = wpUrl
         self.wpUserName = wpUserName
         self.wpPassword = wpPassword
         self.excerptContent=excerptContent
+
+        print(excerptContent)
         # Download File
         f = open(self.path, 'wb')
         f.write(urllib.request.urlopen(self.articlePhotoUrl).read())

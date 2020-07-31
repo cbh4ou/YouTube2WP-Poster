@@ -1,5 +1,5 @@
     # A very simple Flask Hello World app for you to get started with...
-from flask import Blueprint, request, render_template, redirect, url_for, jsonify
+from flask import Blueprint, render_template, redirect
 from flask_login import login_required
 
 home = Blueprint('home', __name__,
@@ -8,9 +8,9 @@ home = Blueprint('home', __name__,
 
 @home.route('/')
 @login_required
-def test_main():
+def route_home():
 
-    return ("<h1>Success</h1>")
+    return render_template("editor_channels.html")
 
 @home.route('/dashboard', methods=['GET'])
 def dashboard():

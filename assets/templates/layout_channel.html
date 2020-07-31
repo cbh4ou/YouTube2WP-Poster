@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+{% include 'meta.html' %}
+    {% block pagestyles %}
+
+{% endblock %}
+  </head>
+
+  <body class="{{template}}">
+      <main>
+      {% include 'nav.html' %}
+
+      {% block content %}{% endblock %}
+    <!-- Scripts -->
+    {% include 'scripts.html' %}
+    {% block additionalscripts %}{% endblock %}
+    </main>
+    {% include 'footer.html' %}
+  </body>
+
+
+  <!--  Scripts-->
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+
+
+   <script type="text/javascript">
+
+ $('.sidenav').sidenav();
+
+
+
+$.ajax({
+            url: "https://youtube.jkwenterprises.com/websites/names",
+            type: 'GET',
+            dataType: 'json', // added data type
+            success: function(data) {
+                $('#website-dropdown').formSelect();
+                console.log(data);
+                 helpers.buildDropdown(
+                    data,
+                    $('#website-dropdown'),
+                    'Add Website'
+                );
+            }
+        });
+
+
+$.ajax({
+            url: "https://youtube.jkwenterprises.com/channels/names",
+            type: 'GET',
+            dataType: 'json', // added data type
+            success: function(data) {
+                $('#channel-dropdown').formSelect();
+                console.log(data);
+                 helpers.buildDropdown(
+                    data,
+                    $('#channel-dropdown'),
+                    'Add New Channel'
+                );
+            }
+        });
+
+
+
+var helpers =
+{
+    buildDropdown: function(result, dropdown, emptyMessage)
+    {
+        // Remove current options
+        dropdown.html("");
+        // Add the empty option with the empty message
+
+            dropdown.append('<option value="" selected >' + emptyMessage + '</option>');
+        // Check result isnt empty
+        if(result != '')
+        {
+            // Loop through each of the results and append the option to the dropdown
+            $.each(result, function(k, v) {
+                dropdown.append('<option value="' + v.id + '">' + v.name + '</option>');
+            });
+            dropdown.formSelect();
+        }
+    }
+}
+
+
+
+
+$('#channel-dropdown').on('change', function() {
+  var val = $("#channel-dropdown option:selected").text();
+    if (val != "Add New Channel") {
+        $('.channelName').hide();
+       $.ajax({
+            url: "/channels/names",
+            dataType: 'json',
+            type: 'post',
+            contentType: 'application/json',
+            data: JSON.stringify({'channel': val}),
+            success: function( data, textStatus, jQxhr ){
+               console.log(data)
+               if(data['hasID'] == true) {
+                        $('input[type=radio][id=required').prop( "checked", true );
+                    }
+                else {
+                        $('input[type=radio][id=optional').prop( "checked", true);
+                    }
+
+
+                $('.channelName').val(val);
+                $('.channelID').val(data['channel_id']);
+                $('.category').val(data['category']);
+            },
+            error: function( jqXhr, textStatus, errorThrown ){
+                console.log( errorThrown );
+            }
+        });
+    }
+    else {$('.channelName').show(); };
+
+});
+
+$('#website-dropdown').on('change', function() {
+  var val = $("#website-dropdown option:selected").text();
+    if (val != "Add Website") {
+                $('.website').val(val);
+    }
+
+});
+
+
+
+
+$(".delete").click(function(e) {
+    e.preventDefault();
+    $('#question p').text($("#channel-dropdown option:selected").text());
+    $('.modal').modal();
+    $('#modal1').modal('open');
+
+});
+
+$(".website-delete").click(function(e) {
+    e.preventDefault();
+    $('#question p').text($("#website-dropdown option:selected").text());
+    $('.modal').modal();
+    $('#modal1').modal('open');
+
+});
+
+   $("#agree").click(function(e) {
+    e.preventDefault();
+    var obj = {
+   'channelName': $("#channel-dropdown option:selected").text()
+    }
+    console.log(obj);
+    $.ajax({
+        url: "/channels/delete",
+        dataType: 'json',
+        type: 'post',
+        contentType: 'application/json',
+        data: JSON.stringify(obj),
+        success: function( data, textStatus, jQxhr ){
+             $('#status p').text($("#channel-dropdown option:selected").text());
+            $('.modal2').modal();
+    $('#modal2').modal('open');
+        },
+        error: function( jqXhr, textStatus, errorThrown ){
+            console.log( errorThrown );
+        }
+    });
+});
+
+
+
+$(".submit").click(function(e) {
+    e.preventDefault();
+    val = $("#channel-dropdown option:selected").text();
+
+    var obj = {
+    'channelName' : $('.channelName').val(),
+    'youtubeID':$('.channelID').val(),
+    'category': $('.category').val(),
+    'hasID': $('input[type=radio][id=optional]:checked').val() == null ? 'true' : 'false',
+    'newName': $("#channel-dropdown option:selected").text()
+    }
+
+    console.log(obj);
+
+    $.ajax({
+        url: "https://youtube.jkwenterprises.com/channels/update",
+        dataType: 'json',
+        type: 'post',
+        contentType: 'application/json',
+        data: JSON.stringify(obj),
+        success: function( data, textStatus, jQxhr ){
+            console.log("Channel Updated");
+            location.reload(true);
+        },
+        error: function( jqXhr, textStatus, errorThrown ){
+            console.log( errorThrown );
+        }
+    });
+});
+
+$(".website-submit").click(function(e) {
+    e.preventDefault();
+
+    var obj = {
+    'website' : $(".website").val(),
+    'password':$('.password').val(),
+    }
+
+    console.log(obj);
+    $.ajax({
+        url: "https://youtube.jkwenterprises.com/websites/update",
+        dataType: 'json',
+        type: 'post',
+        contentType: 'application/json',
+        data: JSON.stringify(obj),
+        success: function( data, textStatus, jQxhr ){
+            console.log("Website Updated");
+            location.reload(true);
+        },
+        error: function( jqXhr, textStatus, errorThrown ){
+            console.log( errorThrown );
+        }
+    });
+
+});
+
+</script>
+
+
+
+</html>
+
